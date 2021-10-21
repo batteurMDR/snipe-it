@@ -121,18 +121,17 @@ class ConsumablesController extends Controller
      *
      * @author [A. Gianotto] [<snipe@snipe.net>]
      * @since [v4.0]
-     * @param  \App\Http\Requests\ImageUploadRequest $request
+     * @param  \App\Http\Requests\Request $request
      * @return \Illuminate\Http\Response
      */
-    public function store(ImageUploadRequest $request)
+    public function store(Request $request)
     {
         $this->authorize('create', Consumable::class);
-        $consumable = new Consumable;
+        $consumable = new Consumable();
         $consumable->fill($request->all());
-        $consumable = $request->handleImages($consumable);
 
         if ($consumable->save()) {
-            return response()->json(Helper::formatStandardApiResponse('success', $consumable, trans('admin/consumables/message.create.success')));
+            return response()->json(Helper::formatStandardApiResponse('success', null, trans('admin/consumables/message.create.success')));
         }
         return response()->json(Helper::formatStandardApiResponse('error', null, $consumable->getErrors()));
     }
