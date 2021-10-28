@@ -3,6 +3,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Events\CheckoutableCheckedIn;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use App\Helpers\StorageHelper;
 use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssetCheckoutRequest;
@@ -394,8 +396,6 @@ class AssetsController extends Controller
             $this->authorize('view', $asset);
             return (new AssetsTransformer)->transformAsset($asset, $request->input('components') );
         }
-
-
     }
     public function licenses(Request $request, $id)
     {
@@ -404,7 +404,36 @@ class AssetsController extends Controller
         $asset = Asset::where('id', $id)->withTrashed()->first();
         $licenses = $asset->licenses()->get();
         return (new LicensesTransformer())->transformLicenses($licenses, $licenses->count());
-     }
+    }
+    public function files(Request $request, $id)
+    {
+        if ($asset = Asset::withTrashed()->findOrFail($id)) {
+            $this->authorize('view', $asset);
+            $files = $asset->uploads;
+            return response()->json($files);
+        }
+    }    
+    public function download(Request $request, $assetId = null, $fileId = null)
+    {
+        if ($asset = Asset::withTrashed()->findOrFail($assetId)) {
+            if (!$log = Actionlog::find($fileId)) {
+                return response()->json(Helper::formatStandardApiResponse('error', null, 'No matching record for that asset/file'));
+            }
+
+            $file = 'private_uploads/assets/'.$log->filename;
+
+            if ($log->action_type =='audit') {
+                $file = 'private_uploads/audits/'.$log->filename;
+            }
+
+            if (!Storage::exists($file)) {
+                return response()->json(Helper::formatStandardApiResponse('error', null, 'File ' . $filename . ' not found on server'));
+
+            }
+
+            return StorageHelper::downloader($file);
+        }
+    }
 
 
     /**

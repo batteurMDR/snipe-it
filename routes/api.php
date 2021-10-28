@@ -393,6 +393,16 @@ Route::group(['prefix' => 'v1','namespace' => 'Api', 'middleware' => 'auth:api']
             'as' => 'api.assets.licenselist',
             'uses' => 'AssetsController@licenses'
         ]);
+    
+        Route::get('{asset_id}/files',  [
+            'as' => 'api.assets.filelist',
+            'uses' => 'AssetsController@files'
+        ]);
+    
+        Route::get('{asset_id}/file/{file_id}',  [
+            'as' => 'api.assets.filedownload',
+            'uses' => 'AssetsController@download'
+        ]);
         
         Route::get( 'bytag/{tag}',  [
             'as' => 'assets.show.bytag',
